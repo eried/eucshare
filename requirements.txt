@@ -2,3 +2,6 @@ fastapi
 uvicorn[standard]
 pytest
 httpx
+
+# dev
+websockets

@@ -54,7 +54,7 @@ class RoomRegistry:
         if not isinstance(msg, dict):
             return
         sender = str(msg.get("from", ""))
-        if msg.get("type") == "leave":
+        if msg.get("type") == "leave" and sender:
             room.latest.pop(sender, None); room.last_seen.pop(sender, None)
             await self._fanout(room, sender_ws, json.dumps({"type": "left", "from": sender}))
             return

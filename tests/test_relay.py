@@ -52,3 +52,14 @@ def test_bad_room_id_rejected():
     with pytest.raises(Exception):
         with c.websocket_connect("/ws/not-valid!"):
             pass
+
+
+def test_client_ip_ignores_spoofed_forwarded_for():
+    """A forged X-Forwarded-For must not dodge the per-ip caps: only X-Real-IP counts."""
+    from main import client_ip
+    class Ws:
+        headers = {"x-forwarded-for": "9.9.9.9, 203.0.113.5", "x-real-ip": "203.0.113.5"}
+        client = type("C", (), {"host": "127.0.0.1"})()
+    assert client_ip(Ws()) == "203.0.113.5"
+    Ws.headers = {"x-forwarded-for": "9.9.9.9"}
+    assert client_ip(Ws()) == "127.0.0.1"

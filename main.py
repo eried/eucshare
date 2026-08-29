@@ -12,10 +12,13 @@ def health():
     return {"ok": True, "rooms": registry.count(), "sockets": registry.socket_count()}
 
 def client_ip(ws: WebSocket) -> str:
-    """Caller address: the first X-Forwarded-For hop behind nginx, else the socket peer."""
-    forwarded = ws.headers.get("x-forwarded-for", "")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
+    """Caller address for the per-ip caps. nginx sets X-Real-IP from $remote_addr, which a
+    client cannot forge; X-Forwarded-For is not used because nginx appends to whatever the
+    client sent, so its first hop is attacker-controlled. If eucshare.ried.no is ever moved
+    behind the Cloudflare proxy, nginx must set X-Real-IP from CF-Connecting-IP instead."""
+    real = ws.headers.get("x-real-ip", "").strip()
+    if real:
+        return real
     return ws.client.host if ws.client else ""
 
 @app.websocket("/ws/{room_id}")

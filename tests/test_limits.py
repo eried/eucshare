@@ -37,23 +37,23 @@ def test_room_cap_blocks_new_rooms_not_joins(monkeypatch, fast_peers):
 def test_socket_cap_per_ip(monkeypatch, fast_peers):
     monkeypatch.setattr(config, "MAX_CONN_PER_IP", 2)
     c = TestClient(main.app)
-    mine = {"x-forwarded-for": "9.9.9.9, 10.0.0.1"}    # nginx style: our hop is the first value
+    mine = {"x-real-ip": "9.9.9.9"}                 # nginx sets X-Real-IP from $remote_addr
     room = room_id(3)
     with c.websocket_connect(f"/ws/{room}", headers=dict(mine)), \
          c.websocket_connect(f"/ws/{room}", headers=dict(mine)):
         assert connect_code(c, room, mine) == 1013                        # a third socket
-        assert connect_code(c, room, {"x-forwarded-for": "9.9.9.8"}) is None    # another ip is free
+        assert connect_code(c, room, {"x-real-ip": "9.9.9.8"}) is None    # another ip is free
     assert main.registry.ip_sockets == {}              # every disconnect path decrements
 
 def test_new_room_rate_per_ip(monkeypatch, fast_peers):
     monkeypatch.setattr(config, "NEW_ROOMS_PER_IP_PER_MIN", 2)
     c = TestClient(main.app)
-    mine = {"x-forwarded-for": "5.5.5.5"}
+    mine = {"x-real-ip": "5.5.5.5"}
     for n in (10, 11):
         assert connect_code(c, room_id(n), mine) is None   # two creations inside the window
     assert connect_code(c, room_id(12), mine) == 1013      # a third new room is refused
     assert connect_code(c, room_id(10), mine) is None      # joining a live room is not creating
-    assert connect_code(c, room_id(12), {"x-forwarded-for": "5.5.5.6"}) is None   # per ip, not global
+    assert connect_code(c, room_id(12), {"x-real-ip": "5.5.5.6"}) is None   # per ip, not global
 
 def test_socket_is_bound_to_its_first_sender_id():
     c = TestClient(main.app)

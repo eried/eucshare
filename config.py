@@ -3,7 +3,7 @@ import os
 
 ROOM_TTL_S = int(os.environ.get("EUCSHARE_ROOM_TTL_S", "120"))    # reconnect grace after the last socket closes
 MAX_PEERS = int(os.environ.get("EUCSHARE_MAX_PEERS", "32"))
-MAX_ROOMS = int(os.environ.get("EUCSHARE_MAX_ROOMS", "200"))      # live rooms in the whole registry
+MAX_ROOMS = int(os.environ.get("EUCSHARE_MAX_ROOMS", "1000"))     # live rooms in the whole registry
 MAX_CONN_PER_IP = int(os.environ.get("EUCSHARE_MAX_CONN_PER_IP", "6"))
 NEW_ROOMS_PER_IP_PER_MIN = int(os.environ.get("EUCSHARE_NEW_ROOMS_PER_IP_PER_MIN", "10"))
 MAX_MSG_BYTES = int(os.environ.get("EUCSHARE_MAX_MSG_BYTES", "2048"))

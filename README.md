@@ -7,7 +7,7 @@ only ever forwards ciphertext. Rooms live in memory and are deleted 2 minutes af
 the last connection closes (a reconnect grace, not a rejoin window). No accounts,
 no database, no request log.
 
-Limits (all env-overridable, see `config.py`): 200 rooms, 32 peers per room, 6
+Limits (all env-overridable, see `config.py`): 1000 rooms, 32 peers per room, 6
 sockets per client IP, 10 new rooms per IP per minute, 2048 byte messages.
 
 Run: `pip install -r requirements.txt && uvicorn main:app --port 8006 --no-access-log`.

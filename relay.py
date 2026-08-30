@@ -85,7 +85,11 @@ class RoomRegistry:
             return
         room.sockets.discard(ws)
         sender = room.senders.pop(ws, None)
-        if sender:                                               # tell peers at once, do not wait for staleness
+        # A rider reconnects with the same sender id (stable per phone and
+        # room); when their OLD socket finally closes, the new one still
+        # carries them, so nothing is forgotten and nobody is told they left.
+        still_here = sender and any(s == sender for s in room.senders.values())
+        if sender and not still_here:                            # tell peers at once, do not wait for staleness
             room.latest.pop(sender, None); room.last_seen.pop(sender, None)
             await self._fanout(room, ws, json.dumps({"type": "left", "from": sender}))
         if not room.sockets:

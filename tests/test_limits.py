@@ -99,3 +99,22 @@ def test_health_reports_open_sockets():
     assert c.get("/health").json() == {"ok": True, "rooms": 0, "sockets": 0}
     with c.websocket_connect(f"/ws/{room_id(7)}"):
         assert c.get("/health").json() == {"ok": True, "rooms": 1, "sockets": 1}
+
+
+def test_reconnect_with_same_sender_keeps_presence():
+    """The old socket of a rider who reconnected under the same id closes without a left frame."""
+    client = TestClient(main.app)
+    room = room_id(77)
+    env = json.dumps({"from": "rider-stable", "ct": "AAAA"})
+    with client.websocket_connect(f"/ws/{room}") as watcher:
+        old = client.websocket_connect(f"/ws/{room}"); old.__enter__(); old.send_text(env)
+        assert json.loads(watcher.receive_text())["from"] == "rider-stable"
+        new = client.websocket_connect(f"/ws/{room}"); new.__enter__(); new.send_text(env)
+        assert json.loads(watcher.receive_text())["from"] == "rider-stable"
+        old.__exit__(None, None, None)                    # the stale socket goes away
+        # the room still lists the rider and the watcher gets no "left"
+        r = main.registry.rooms[room]
+        assert "rider-stable" in r.latest and "rider-stable" in r.senders.values()
+        new.send_text(env)
+        assert json.loads(watcher.receive_text()).get("type") != "left"
+        new.__exit__(None, None, None)
